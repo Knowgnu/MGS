@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>상품목록</title>
+</head>
+<body>
+<div>
+    <!--  게시글 갯수 변경  -->
+    <select id="limit">
+        <option value="5">5개씩</option>
+        <option value="10">10개씩</option>
+        <option value="20">20개씩</option>
+    </select>
+
+    <!--  카테고리  -->
+    <select id="category">
+        <option value="PNAME">이름</option>
+    </select>
+
+    <!--  검색어  -->
+    <input type="text" id="keyword"/>
+
+    <!--  검색버튼  -->
+    <input type="button" value="검색" id="btnSearch">
+    <input type="button" value="둘다" id="every">
+    <input type="button" value="일반" id="one">
+    <input type="button" value="공동" id="many">
+</div>
+<table>
+    <caption>상품목록(페이징)</caption>
+    <thead>
+    <tr>
+        <th>사진</th>
+        <th>상품이름</th>
+        <th>정보</th>
+        <th>가격</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<div id="numbering"></div>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script>
+    let page = 1;       // 페이지번호
+    let limit = 5;      // 한페이지에 출력될 데이터 갯수
+    const block = 5;    // 한페이지에 출력될 페이지 갯수
+    let count = 0;      // 전체 데이터 갯수
+    let list = [];      // 데이터를 담을 변수
+
+    $(function () {
+        $.ajax({
+            type: "POST",
+            url: "sPagingList",
+            dataType: "json",
+            success: function (result) {
+                console.log(result);
+                list = result;
+
+                sPagingList(page, list);
+            },
+            error: function () {
+                alert('sPagingList 통신 실패!');
+            }
+        });
+
+        // 게시글 갯수 변경
+        $('#limit').change(function () {
+            page = 1;
+            limit = parseInt($('#limit').val());
+            sPagingList(page, list);
+        });
+
+        // 검색한 목록 출력
+        $('#btnSearch').click(function () {
+            let category = $('#category').val();
+            let keyword = $('#keyword').val();
+
+            $.ajax({
+                type: "POST",
+                url: "sSearchList",
+                data: {"category": category, "keyword": keyword},
+                dataType: "json",
+                success: function (result) {
+                    list = result;
+                    sPagingList(page, list);
+                },
+                error: function () {
+                    alert('sSearchList 통신 실패!');
+                }
+            });
+        });
+
+        $('body').on('click', '#every', function () {
+            $.ajax({
+                type : "POST",
+                url : "sPagingList",
+                success:function (result){
+                    console.log(result)
+                    list=result;
+
+                    sPagingList(page, list);
+                },
+                error : function (){
+                    alert('sPagingList 통신 실패!')
+                }
+            });
+        });
+
+        $('body').on('click', '#one', function () {
+                let type = 1;
+                $.ajax({
+                    type : "POST",
+                    url : "sPagingList2",
+                    data : { "type" : type },
+                    success:function (result){
+                        console.log(result)
+                        list=result;
+
+                        sPagingList(page, list);
+                    },
+                    error : function (){
+                        alert('sPagingList2 통신 실패!')
+                    }
+                });
+            });
+
+        $('body').on('click', '#many', function () {
+            let type = 2;
+            $.ajax({
+                type : "POST",
+                url : "sPagingList2",
+                data : { "type" : type },
+                success:function (result){
+                    console.log(result)
+                    list=result;
+
+                    sPagingList(page, list);
+                },
+                error : function (){
+                    alert('sPagingList2 통신 실패!')
+                }
+            });
+
+        });
+
+        // 리스트 출력 함수
+        function sPagingList(page, list) {
+            $('table tbody').empty();
+            count = list.length;
+
+            let maxPage = Math.ceil(count / limit);
+            if (page > maxPage) {
+                page = maxPage;
+            }
+
+            let startRow = (page - 1) * limit;  // 0 5 10
+            let endRow = page * limit - 1;      // 4 9 14
+            if (endRow >= count) {
+                endRow = count - 1;
+            }
+
+            let startPage = (Math.ceil(page / block) - 1) * block + 1;      // 1 1 1 1 1 6  6  6
+            let endPage = startPage + block - 1;                            // 5 5 5 5 5 10 10 10
+
+            if (endPage > maxPage) {
+                endPage = maxPage;
+            }
+
+            let txt = "";
+
+            console.log(`page : ${page}, startPage : ${startPage}, endPage : ${endPage}, maxPage : ${maxPage}`);
+            console.log(`count : ${count}, startRow : ${startRow}, endRow : ${endRow}`);
+            console.log(`limit : ${limit}, block : ${block}`);
+
+            for (let i = startRow; i <= endRow; i++) {
+                    txt += `<tr>`;
+                    txt += `<td><img src="/product/${list[i].pmPicName}" th:href="/sView/${list[i].sNum}" width="100px" height="100px"/></td>`;
+                    txt += `<td><a href="/sView/${list[i].sNum}">${list[i].pName}</a></td>`;
+                    txt += `<td>${list[i].pInfo}</td>`;
+                if (list[i].sDiscount == 0) {
+                    // 할인이 없는 경우
+                    txt += `<td>정가 : ${list[i].pPrice} 원</br></br></td>`;
+
+                } else {
+                    // 할인이 있는 경우
+                    let discountedPrice = Math.floor(list[i].pPrice - (list[i].pPrice * list[i].sDiscount / 100));
+
+                    txt += `<td>정가 : ${Math.floor(list[i].pPrice)} 원</br>`;
+                    txt += `할인율 : ${list[i].sDiscount}%</br>`;
+                    txt += `할인된 가격 : ${discountedPrice} 원</br></br></td>`;
+                }
+                    txt += `</tr>`;
+            }
+
+            $('table tbody').empty();
+            $('table tbody').append(txt);
+
+            let pageNum = [];
+            let prev = (page - 1 < 1 ? 1 : page - 1);
+            let next = (page + 1 >= maxPage ? maxPage : +1);
+
+            // [이전] 버튼
+            if (page <= 1) {
+                pageNum += ` \< `;
+            } else {
+                pageNum += `<a class="prev" href="#" data-page="${prev}"> \< </a>`;
+            }
+            // [번호] 버튼
+            for (let i = startPage; i <= endPage; i++) {
+                if (page == i) {
+                    pageNum += ` ${i} `;
+                    continue;
+                }
+                pageNum += `<a class="iNum" href="#" data-page="${i}"> ${i} </a>`;
+            }
+
+            //[다음] 버튼
+            if (page >= maxPage) {
+                pageNum += ` \> `;
+            } else {
+                pageNum += `<a class="next" href="#" data-page="${next}"> \> </a>`;
+            }
+
+            $('#numbering').empty();
+            $('#numbering').append(pageNum);
+
+            // [이전] [번호] [다음] 버튼 클릭스
+            $(document).on("click", "#numbering a", function (e) {
+                page = parseInt($(this).data('page'));
+                sPagingList(page, list);
+            });
+
+        }
+
+    });
+
+
+
+</script>
+
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>판매 상품정보 상세보기</title>
+    <style>
+        table, td, th {
+            border: solid 1px;
+            border-collapse: collapse;
+        }
+
+        td, th {
+            padding: 10px
+        }
+    </style>
+</head>
+<body>
+<table>
+    <caption>판매 상품정보 상세보기</caption>
+    <input type="hidden" name="pNum" th:value="${view.pNum}"/>
+    <tr>
+        <th>메인사진</th>
+        <td><img th:src="@{|/product/${view.pmPicName}|}" width="200px"></td>
+    </tr>
+
+    <tr>
+        <th>이름</th>
+        <td>[[${view.PName}]]</td>
+    </tr>
+
+    <tr>
+        <th>상품간단정보</th>
+        <td>[[${view.pspInfo}]]</td>
+    </tr>
+
+    <tr th:if="${view.SDiscount} == 0">
+        <th>가격</th>
+        <td>[[${view.PPrice}]] 원</td>
+    </tr>
+
+    <tr th:if="${view.SDiscount} != 0">
+        <th>가격</th>
+
+        <td>정가 : [[${view.PPrice}]] / [[${view.sDiscount}]] % 할인</br>
+            <p th:text="${(view.PPrice - (view.PPrice * view.SDiscount/100))} + ' 원'"></p></td>
+    </tr>
+
+    <tr th:if="${view.sdPrice} != 0">
+        <th>배송비</th>
+        <td>[[${view.sdPrice}]]원</td>
+    </tr>
+    <tr th:if="${view.sdPrice} == 0">
+        <th>배송비</th>
+        <td>무료배송</td>
+    </tr>
+
+    <tr>
+        <th>할인율</th>
+        <td>[[${view.SDiscount}]]</td>
+    </tr>
+
+    <tr>
+        <th>마감일</th>
+        <td>[[${view.SfDate}]]</td>
+    </tr>
+
+    <tr>
+        <th>정보</th>
+        <td th:utext="${view.PInfo}"></td>
+    </tr>
+
+    <tr th:if="${view.piPicName1 != null}">
+        <th rowspan="3">상세사진</th>
+        <td><img th:src="@{|/product/${view.piPicName1}|}" width="200px"></td>
+    </tr>
+
+    <tr th:if="${view.piPicName2 != null}">
+        <td><img th:src="@{|/product/${view.piPicName2}|}" width="200px"></td>
+    </tr>
+
+    <tr th:if="${view.piPicName3 != null}">
+        <td><img th:src="@{|/product/${view.piPicName3}|}" width="200px"></td>
+    </tr>
+    <tr>
+        <th colspan="2">
+            <input th:type="button" value="구매" id="buy"/>
+            <input th:type="button" value="수정" id="modify" th:if="${session.loginId eq 'admin'}"/>
+            <input th:type="button" value="삭제" id="delete" th:if="${session.loginId eq 'admin'}"/>
+            <div id="lCount">
+            </div>
+            <span th:text="${likecount}"></span>
+        </th>
+
+    </tr>
+
+</table>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script>
+
+    let id = "[[${session.loginId}]]";
+
+    $('#buy').click(function () {
+        if (id == ""){
+            alert('로그인 후 이용해주세요!')
+            location.href=""
+        }
+        if (id != ""){
+            location.href = "";
+        }
+    });
+
+    // 수정
+    $('#modify').click(function () {
+        location.href = "/sModiForm/[[${view.SNum}]]";
+    });
+
+    // 삭제
+    $('#delete').click(function () {
+        location.href = "/sDelete/[[${view.SNum}]]";
+    });
+
+    $(function () {
+        let mId = "[[${session.loginId}]]";
+        let id = "[[${id}]]";
+        let sNum = [[${view.sNum}]];
+        let pNum = [[${view.pNum}]];
+        let txt ="";
+        if(mId == ""){
+            txt = `<input type="button" value="좋아요" id="NL">`;
+            $('#lCount').empty();
+            $('#lCount').append(txt);
+        }
+
+        if(mId != id){
+            txt = `<input type="button" value="좋아요" id="likeup">`;
+            $('#lCount').empty();
+            $('#lCount').append(txt);
+        }
+        if(mId == id && mId != ""){
+            txt = `<input type="button" value="좋아요취소" id="likedown">`;
+            $('#lCount').empty();
+            $('#lCount').append(txt);
+        }
+
+        $('body').on('click', '#NL',function (){
+            alert('로그인 후 이용해주세요!');
+        })
+        $('body').on('click', '#likeup', function() {
+                $.ajax({
+                    type: "POST",
+                    url: "/likeup",
+                    data: {"mId": mId, "sNum": sNum, "pNum" : pNum},
+                    dataType: "json",
+                    success: function (result) {
+                        console.log("result1 : " + result);
+                        // if (result == 1) {
+                        //     txt = `<input type="button" value="좋아요취소" id="likedown">`;
+                        //     $('#lCount').empty();
+                        //     $('#lCount').append(txt);
+                        // }
+                        location.href="/sView/" + sNum;
+                    },
+                    error: function () {
+                        alert('likeup 통신 실패!')
+                    }
+                });
+        });
+
+        $('body').on('click', '#likedown', function(){
+        $.ajax({
+            type: "POST",
+            url : "/likedown",
+            data : { "mId" : mId , "sNum" : sNum, "pNum" : pNum},
+            dataType: "json",
+            success : function (result2){
+                console.log("result2 : " + result2);
+                // if (result2 == 2){
+                //     txt = `<input type="button" value="좋아요" id="likeup">`;
+                //     $('#lCount').empty();
+                //     $('#lCount').append(txt);
+                // }
+                location.href="/sView/" + sNum;
+            },error : function (){
+                alert('likedown 통신 실패!')
+            }
+        });
+        });
+    });
+
+
+</script>
+
+</html>

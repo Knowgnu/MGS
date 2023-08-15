@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="">
+    <meta name="description" content="">
+    <link rel="stylesheet" href="/css/summernote/summernote-lite.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>상품수정</title>
+    <style>
+        table, td, th{
+            border: solid 1px;
+            border-collapse: collapse;
+        }
+        td, th{
+            padding : 10px
+        }
+    </style>
+</head>
+
+<body>
+<form action="/pModify" method="POST" name="/pModiForm" enctype="multipart/form-data">
+    <input type="hidden" name="pNum" th:value="${modify.PNum}">
+
+    <table>
+        <caption>상품수정</caption>
+
+        <tr>
+            <th>회사명</th>
+            <td>
+                <select name="cNum">
+                    <option th:each="company : ${company}"
+                            th:value="${company.cNum}"
+                            th:selected="${company.cNum == modify.cNum}">
+                        [[${company.cName}]]
+                    </option>
+                </select>
+            </td>
+        </tr>
+
+        <tr>
+            <th>상품이름</th>
+            <td><input type="text" name="pName" th:value="${modify.PName}" required size="30"/></td>
+        </tr>
+
+        <tr>
+            <th>상품가격</th>
+            <td><input type="text" name="pPrice" th:value="${modify.PPrice}" required size="30"/></td>
+        </tr>
+
+        <tr>
+            <th>상품간단정보</th>
+            <td><input type="text" name="pspInfo" th:value="${modify.pspInfo}" required size="30"></td>
+        </tr>
+
+        <tr>
+            <th>상품정보</th>
+            <td>
+                <textarea id="summernote" th:value="${modify.PInfo}" name="pInfo" rows="20" cols="40">[[${modify.PInfo}]]</textarea>
+            </td>
+        </tr>
+
+        <tr>
+            <th>메인사진</th>
+            <td>
+                <input type="file" name="pmPic" id="pmPic"/>
+                <br/><img id="pmPicName" width="150px"/>
+                <input type="hidden" name="pmPicName" th:value="${modify.PmPicName}"/>
+            </td>
+        </tr>
+
+        <tr>
+            <th>상세사진1</th>
+            <td>
+                <input type="file" name="piPic1" id="piPic1"/>
+                <br/><img id="piPicName1" width="150px"/>
+                <input type="hidden" name="piPicName1" th:value="${modify.PiPicName1}"/>
+            </td>
+        </tr>
+
+        <tr>
+            <th>상세사진2</th>
+            <td>
+                <input type="file" name="piPic2" id="piPic2"/>
+                <br/><img id="piPicName2" width="150px"/>
+                <input type="hidden" name="piPicName2" th:value="${modify.PiPicName2}"/>
+            </td>
+        </tr>
+
+        <tr>
+            <th>상세사진3</th>
+            <td>
+                <input type="file" name="piPic3" id="piPic3"/>
+                <br/><img id="piPicName3" width="150px"/>
+                <input type="hidden" name="piPicName3" th:value="${modify.PiPicName3}"/>
+            </td>
+        </tr>
+
+        <tr>
+            <th colspan="2">
+                <input type="submit" value="수정"/>
+            </th>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="/js/summernote/summernote-lite.js"></script>
+<script src="/js/summernote/lang/summernote-ko-KR.js"></script>
+<script>
+
+
+    $('#summernote').summernote({
+        height: 300,                 // 에디터 높이
+        minHeight: null,             // 최소 높이
+        maxHeight: null,             // 최대 높이
+        focus: true,                  // 에디터 로딩후 포커스를 맞출지 여부
+        lang: "ko-KR",					// 한글 설정
+        placeholder: '최대 2048자까지 쓸 수 있습니다',	//placeholder 설정
+        callbacks: {	//여기 부분이 이미지를 첨부하는 부분
+            onImageUpload : function(files) {
+                uploadSummernoteImageFile(files[0],this);
+            },
+            onPaste: function (e) {
+                var clipboardData = e.originalEvent.clipboardData;
+                if (clipboardData && clipboardData.items && clipboardData.items.length) {
+                    var item = clipboardData.items[0];
+                    if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+                        e.preventDefault();
+                    }
+                }
+            }
+        }
+    });
+    /**
+     * 이미지 파일 업로드
+     */
+    function uploadSummernoteImageFile(file, editor) {
+        data = new FormData();
+        data.append("file", file);
+        $.ajax({
+            data : data,
+            type : "POST",
+            url : "/uploadSummernoteImageFile",
+            contentType : false,
+            processData : false,
+            success : function(data) {
+                //항상 업로드된 파일의 url이 있어야 한다.
+                $(editor).summernote('insertImage', data.url);
+            }
+        });
+    }
+
+    $("div.note-editable").on('drop',function(e){
+        for(i=0; i< e.originalEvent.dataTransfer.files.length; i++){
+            uploadSummernoteImageFile(e.originalEvent.dataTransfer.files[i],$("#summernote")[0]);
+        }
+        e.preventDefault();
+    })
+
+    // 사진 미리보기
+    $('#pmPic').on("change", function (event) {
+
+        let file = event.target.files[0];
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#pmPicName').attr("src", e.target.result);
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+    // 사진 미리보기
+    $('#piPic1').on("change", function (event) {
+
+        let file = event.target.files[0];
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#piPicName1').attr("src", e.target.result);
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+    // 사진 미리보기
+    $('#piPic2').on("change", function (event) {
+
+        let file = event.target.files[0];
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#piPicName2').attr("src", e.target.result);
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+    // 사진 미리보기
+    $('#piPic3').on("change", function (event) {
+
+        let file = event.target.files[0];
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#piPicName3').attr("src", e.target.result);
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+
+</script>
+
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="author" content="sooms">
+  <meta name="date" content="">
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+  <title>판매등록</title>
+</head>
+
+<body>
+<form action="/sRegister" method="post" enctype="multipart/form-data" name="sRegiForm">
+
+  <table>
+    <caption>상품판매</caption>
+    <input type="hidden" name="pNum" th:value="${product.PNum}"/>
+    <input type="hidden" name="likeCount" th:value="0"}>
+    <tr>
+      <th>상품이름</th>
+      <td>[[${product.PName}]]</td>
+    </tr>
+
+    <tr>
+      <th>상품가격</th>
+      <td>[[${product.PPrice}]] 원</td>
+    </tr>
+
+    <tr>
+      <th>상품정보</th>
+      <td th:utext="${product.PInfo}"></td>
+    </tr>
+
+    <tr th:if="${product.PmPicName}">
+      <th>메인사진</th>
+      <td><img th:src="@{|/product/${product.PmPicName}|}" width="200px"></td>
+    </tr>
+
+    <tr th:if="${product.PiPicName1}">
+      <th>상세사진</th>
+      <td><img th:src="@{|/product/${product.piPicName1}|}" width="200px"></td>
+    </tr>
+
+    <tr th:if="${product.PiPicName2}">
+      <td><img th:src="@{|/product/${product.piPicName2}|}" width="200px"></td>
+    </tr>
+
+    <tr th:if="${product.PiPicName3}">
+      <td><img th:src="@{|/product/${product.piPicName3}|}" width="200px"></td>
+    </tr>
+
+    <tr>
+      <th>할인율</th>
+      <td><input type="number" name="sDiscount" value="0"required/></td>
+    </tr>
+
+    <tr>
+      <th>배송비</th>
+      <td>
+        <select name="sdPrice">
+          <option value="0">무료배송</option>
+          <option value="3000">3000원</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <th>상품수량</th>
+      <td><input type="number" name="sCount" required/></td>
+    </tr>
+
+
+    <tr>
+      <th>타입</th>
+      <td>
+        일반<input type="radio" name="sType" value="01"/>
+        공동<input type="radio" name="sType" value="02"/>
+      </td>
+    </tr>
+
+    <tr>
+      <th>마감일</th>
+      <td><input type="date" name="sfDate" size="30"/></td>
+    </tr>
+
+
+    <tr>
+      <th colspan="2"><input type="submit" value="등록"/></th>
+      </th>
+    </tr>
+  </table>
+</form>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+
+
+  // 사진 미리보기
+  $('#pmPic').on("change", function (event) {
+
+    let file = event.target.files[0];
+
+    let reader = new FileReader();
+
+    reader.onload = function (e) {
+      $('#pmPicName').attr("src", e.target.result);
+    }
+
+    reader.readAsDataURL(file);
+
+  });
+
+  // 사진 미리보기
+  $('#piPic1').on("change", function (event) {
+
+    let file = event.target.files[0];
+
+    let reader = new FileReader();
+
+    reader.onload = function (e) {
+      $('#piPicName1').attr("src", e.target.result);
+    }
+
+    reader.readAsDataURL(file);
+
+  });
+
+  // 사진 미리보기
+  $('#piPic2').on("change", function (event) {
+
+    let file = event.target.files[0];
+
+    let reader = new FileReader();
+
+    reader.onload = function (e) {
+      $('#piPicName2').attr("src", e.target.result);
+    }
+
+    reader.readAsDataURL(file);
+
+  });
+
+  // 사진 미리보기
+  $('#piPic3').on("change", function (event) {
+
+    let file = event.target.files[0];
+
+    let reader = new FileReader();
+
+    reader.onload = function (e) {
+      $('#piPicName3').attr("src", e.target.result);
+    }
+
+    reader.readAsDataURL(file);
+
+  });
+
+
+</script>
+
+</html>

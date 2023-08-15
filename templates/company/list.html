@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>회사목록</title>
+</head>
+<body>
+<div>
+    <!--  게시글 갯수 변경  -->
+    <select id="limit">
+        <option value="5">5개씩</option>
+        <option value="10">10개씩</option>
+        <option value="20">20개씩</option>
+    </select>
+
+    <!--  카테고리  -->
+    <select id="category">
+        <option value="CNAME">이름</option>
+        <option value="CADDR">주소</option>
+        <option value="CPHONE">연락처</option>
+    </select>
+
+    <!--  검색어  -->
+    <input type="text" id="keyword"/>
+
+    <!--  검색버튼  -->
+    <input type="button" value="검색" id="btnSearch">
+</div>
+<table>
+    <caption>회사목록(페이징)</caption>
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>회사이름</th>
+        <th>주소</th>
+        <th>연락처</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<div id="numbering"></div>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script>
+    let page = 1;       // 페이지번호
+    let limit = 5;      // 한페이지에 출력될 데이터 갯수
+    const block = 5;    // 한페이지에 출력될 페이지 갯수
+    let count = 0;      // 전체 데이터 갯수
+    let list = [];      // 데이터를 담을 변수
+
+    $(function () {
+
+
+        $.ajax({
+            type: "POST",
+            url: "cPagingList",
+            dataType: "json",
+            success: function (result) {
+                console.log(result);
+                list = result;
+
+                cPagingList(page, list);
+            },
+            error: function () {
+                alert('cPagingList 통신 실패!');
+            }
+        });
+
+        // 게시글 갯수 변경
+        $('#limit').change(function () {
+            page = 1;
+            limit = parseInt($('#limit').val());
+            cPagingList(page, list);
+        });
+
+        // 검색한 목록 출력
+        $('#btnSearch').click(function () {
+            let category = $('#category').val();
+            let keyword = $('#keyword').val();
+
+            $.ajax({
+                type: "POST",
+                url: "cSearchList",
+                data: {"category": category, "keyword": keyword},
+                dataType: "json",
+                success: function (result) {
+                    list = result;
+                    cPagingList(page, list);
+                },
+                error: function () {
+                    alert('cSearchList 통신 실패!');
+                }
+            });
+        });
+
+        // 리스트 출력 함수
+        function cPagingList(page, list) {
+            count = list.length;
+
+            let maxPage = Math.ceil(count / limit);
+            if (page > maxPage) {
+                page = maxPage;
+            }
+
+            let startRow = (page - 1) * limit;  // 0 5 10
+            let endRow = page * limit - 1;      // 4 9 14
+            if (endRow >= count) {
+                endRow = count - 1;
+            }
+
+            let startPage = (Math.ceil(page / block) - 1) * block + 1;      // 1 1 1 1 1 6  6  6
+            let endPage = startPage + block - 1;                            // 5 5 5 5 5 10 10 10
+
+            if (endPage > maxPage) {
+                endPage = maxPage;
+            }
+
+            let txt = "";
+
+            console.log(`page : ${page}, startPage : ${startPage}, endPage : ${endPage}, maxPage : ${maxPage}`);
+            console.log(`count : ${count}, startRow : ${startRow}, endRow : ${endRow}`);
+            console.log(`limit : ${limit}, block : ${block}`);
+
+            for (let i = startRow; i <= endRow; i++) {
+                txt += `<tr>`;
+                txt += `<td>${list[i].cNum}</td>`;
+                txt += `<td><a href="/cView/${list[i].cNum}">${list[i].cName}</a></td>`;
+                txt += `<td>${list[i].cAddr}</td>`;
+                txt += `<td>${list[i].cPhone}</td>`;
+                txt += `</tr>`;
+
+            }
+
+            $('table tbody').empty();
+            $('table tbody').append(txt);
+
+            let pageNum = "";
+            let prev = (page - 1 < 1 ? 1 : page - 1);
+            let next = (page + 1 >= maxPage ? maxPage : page + 1);
+
+            // [이전] 버튼
+            if (page <= 1) {
+                pageNum += `\<`;
+            } else {
+                pageNum += `<a class="prev" href="#" data-page="${prev}">\< </a>`;
+            }
+
+            // [번호] 버튼
+            for (let i = startPage; i <= endPage; i++) {
+                if (page == i) {
+                    pageNum += `${i}`;
+                    continue;
+                }
+                pageNum += `<a class="iNum" href="#" data-page="${i}">${i}</a>`;
+            }
+
+            // [다음] 버튼
+            if (page >= maxPage) {
+                pageNum += `\>`;
+            } else {
+                pageNum += `<a class="next" href="#" data-page="${next}">\> </a>`;
+            }
+
+            $('#numbering').empty();
+            $('#numbering').append(pageNum);
+
+            // [이전] [번호] [다음] 버튼 클릭시
+            $(document).on("click", "#numbering a", function (e) {
+                page = parseInt($(this).data('page'));
+                cPagingList(page, list);
+            });
+
+
+        }
+
+    });
+</script>
+
+</html>

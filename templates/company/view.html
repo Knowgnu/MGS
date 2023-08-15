@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>회사정보 상세보기</title>
+</head>
+<body>
+<table>
+    <caption>회원정보 상세보기</caption>
+    <tr>
+        <th>항목</th>
+        <th>내용</th>
+    </tr>
+
+    <tr>
+        <th>번호</th>
+        <td>[[${view.CNum}]]</td>
+    </tr>
+
+    <tr>
+        <th>이름</th>
+        <td>[[${view.CName}]]</td>
+    </tr>
+
+    <tr>
+        <th>주소</th>
+        <td>[[${view.CAddr}]]</td>
+    </tr>
+
+    <tr>
+        <th>연락처</th>
+        <td>[[${view.CPhone}]]</td>
+    </tr>
+
+
+    <tr>
+        <th colspan="2">
+            <input th:type="button"  value="수정" id="modify"/>
+            <input th:type="button" value="삭제" id="delete"/>
+            <button id="pRegister">상품등록</button>
+
+        </th>
+
+    </tr>
+
+</table>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script>
+    // 수정
+    $('#modify').click(function () {
+        location.href = "/cModiForm/[[${view.cNum}]]";
+    });
+
+    // 삭제
+    $('#delete').click(function () {
+        location.href = "/cDelete/[[${view.cNum}]]";
+    });
+
+    // 상품등록
+    $('#pRegister').click(function () {
+        location.href = "/pRegiForm/[[${view.CNum}]]";
+    });
+</script>
+
+</html>

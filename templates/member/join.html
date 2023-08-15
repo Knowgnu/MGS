@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="23.07.04">
+    <meta name="description" content="JPA 회원가입">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>회원가입(이메일인증)</title>
+</head>
+
+<body>
+<form action="mJoin" method="post" enctype="multipart/form-data" name="mJoinForm">
+    <table>
+        <caption>회원가입</caption>
+
+        <tr>
+            <th>아이디</th>
+            <td><input type="text" id="mId" name="mId" required size="30"/>
+                <br/><span id="check1"></span></td>
+        </tr>
+
+        <tr>
+            <th>비밀번호</th>
+            <td><input type="password" id="mPw" name="mPw" required size="30"/>
+                <br/><span id="check2"></span></td>
+        </tr>
+
+        <tr>
+            <th>비밀번호 확인</th>
+            <td><input type="password" id="checkPw" required size="30"/>
+                <br/><span id="check3"></span></td>
+        </tr>
+
+        <tr>
+            <th>이름</th>
+            <td><input type="text" name="mName" required size="30"/></td>
+        </tr>
+
+        <tr>
+            <th>생년월일</th>
+            <td><input type="date" name="mBirth" required/></td>
+        </tr>
+
+        <tr>
+            <th>성별</th>
+            <td>
+                남성<input type="radio" name="mGender" value="남성"/>
+                여성<input type="radio" name="mGender" value="여성"/>
+            </td>
+        </tr>
+
+        <tr>
+            <th>이메일</th>
+            <td><input type="email" id="mEmail" name="mEmail" required size="25"/>
+                <span id="check4"><input type="button" id="checkEmail" value="인증번호 발송"/></span><input type="button" id="kLogin" value="카카오 인증"><br>
+            <span id="check5"></span></td>
+        </tr>
+
+        <tr>
+            <th>연락처</th>
+            <td><input type="text" name="mPhone" required size="40"/></td>
+        </tr>
+
+        <tr>
+            <th>주소</th>
+            <td>
+                <input type="text" id="sample6_postcode" placeholder="우편번호"
+                       size="25"/>
+                <input type="button" onclick="sample6_execDaumPostcode()" value="우편번호 찾기"/><br>
+                <input type="text" size="40" id="sample6_address" placeholder="주소"/><br>
+                <input type="text" size="40" id="sample6_detailAddress" placeholder="상세주소"/>
+                <input type="hidden" id="mAddr" name="mAddr"/>
+            </td>
+        </tr>
+
+        <tr>
+            <th colspan="2">
+                <input type="button" value="가입" id="submitForm"/>
+            </th>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+
+    // 카카오인증버튼
+    $('#kLogin').click(function () {
+        location.href = "https://kauth.kakao.com/oauth/authorize?client_id=026e112cb03c5da1a1a341e3a7a12982&redirect_uri=http://localhost:9092/oauth/kakao&response_type=code&prompt=login";
+    });
+
+    let check_id = false;
+    let check_pw = false;
+    let check_pw2 = false;
+    let check_email = false;
+    let check_email2 = false;
+
+    $(function () {
+
+        // id="mId" 인 요소의 키를 눌렀다가 뗐을때 실행되는 함수
+        $('#mId').keyup(function () {
+            let mId = $('#mId').val();
+            let check1 = $('#check1');
+
+            // Ajax를 사용해서 아이디 중복체크
+            $.ajax({
+                type: "POST",
+                url: "idCheck",
+                data: {"mId": mId},
+                dataType: "text",
+                success: function (result) {
+                    if (result == "OK") {
+                        check1.html(mId + '는 사용 가능한 아이디');
+                        check1.css('color', 'blue');
+                        check_id = true;
+                    } else {
+                        check1.html(mId + '는 사용중인 아이디');
+                        check1.css('color', 'red');
+                        check_id = false;
+                    }
+                },
+                error: function () {
+                    alert('idCheck 통신 실패!');
+                }
+            });
+        });
+
+        $('#mPw').keyup(function () {
+            let mPw = $('#mPw').val();
+            let check2 = $('#check2');
+
+            // 기본값 -1
+            let num = mPw.search(/[0-9]/);       // 숫자
+            let eng = mPw.search(/[a-z]/);       // 영문자
+            let spe = mPw.search(/[~!@#$%^&*]/); // 특수문자
+            let spc = mPw.search(/\s/);          // 공백여부
+
+            if (mPw.length < 8 || mPw.length > 16) {
+                check2.html("비밀번호는 8자에서 16자리 이내로 입력해주세요.");
+                check2.css('color', 'red');
+                check_pw = false;
+            } else if (spc != -1) {
+                check2.html("공백없이 입력해주세요.");
+                check2.css('color', 'red');
+                check_pw = false;
+            } else if (num == -1 || eng == -1 || spe == -1) {
+                check2.html("영문, 숫자, 특수문자를 혼합해서 입력해주세요.");
+                check2.css('color', 'red');
+                check_pw = false;
+            } else {
+                check2.html("사용가능한 비밀번호 입니다.");
+                check2.css('color', 'blue');
+                check_pw = true;
+            }
+        });
+
+        $('#checkPw').keyup(function () {
+            let mPw = $('#mPw').val();
+            let checkPw = $('#checkPw').val();
+            let check3 = $('#check3');
+
+            if (mPw == checkPw) {
+                check3.html("비밀번호가 일치합니다.");
+                check3.css('color', 'blue');
+                check_pw2 = true;
+            } else {
+                check3.html("비밀번호가 일치하지 않습니다.");
+                check3.css('color', 'red');
+                check_pw2 = false;
+            }
+        });
+
+        $('#mEmail').keyup(function(){
+           let mEmail = $('#mEmail').val();
+           let check5 = $('#check5')
+
+            $.ajax({
+                type: "POST",
+                url: "emailCheck3",
+                data: {"mEmail": mEmail},
+                dataType: "text",
+                success: function (result) {
+                    if (result == "OK") {
+                        check5.html(mEmail + '는 사용 가능한 이메일입니다.');
+                        check5.css('color', 'blue');
+                        check_email2 = true;
+                    } else {
+                        check5.html(mEmail + '는 사용중인 이메일입니다.');
+                        check5.css('color', 'red');
+                        check_email2 = false;
+                    }
+                },
+                error: function () {
+                    alert('emailCheck3 통신 실패!');
+                }
+            });
+        });
+
+        $('#checkEmail').click(function () {
+            console.log('클릭');
+            let mEmail = $('#mEmail').val();
+            let check4 = $('#check4');
+
+            // Ajax 사용해서 이메일 전송 및 인증번호 받아오기
+            $.ajax({
+                type: "POST",
+                url: "emailCheck",
+                data: {"mEmail": mEmail},
+                dataType: "text",
+                success: function (uuid) {
+                    console.log(uuid);
+                    check4.empty();
+                    check4.append(`<br/><input type="text" id="uuid1" size="25"/>`);
+                    check4.append(`<input type="button" value="인증" id="btnUUID" data-value="${uuid}"/>`);
+                },
+                error: function () {
+                    alert('emailCheck 통신 실패!')
+                }
+            });
+        });
+
+        $(document).on("click", "#btnUUID", function () {
+            let uuid1 = $('#uuid1').val();
+            let uuid = $(this).data("value");
+
+            if (uuid1 == uuid) {
+                alert('이메일 인증에 성공했습니다.');
+                check_email = true;
+            } else {
+                alert('인증번호를 확인해주세요.');
+                $('#uuid1').val("");
+                check_email = false;
+            }
+        });
+    });
+
+    function sample6_execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function (data) {
+                // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
+                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                var addr = ''; // 주소 변수
+
+                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+                if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                    addr = data.roadAddress;
+                } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                    addr = data.jibunAddress;
+                }
+
+                // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                document.getElementById('sample6_postcode').value = data.zonecode;
+                document.getElementById("sample6_address").value = addr;
+                // 커서를 상세주소 필드로 이동한다.
+                document.getElementById("sample6_detailAddress").focus();
+
+            }
+        }).open();
+    }
+
+    $('#mProfile').on("change", function (event) {
+
+        let file = event.target.files[0];
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#mProfileName').attr("src", e.target.result);
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+    $('#submitForm').click(function () {
+        let mAddr = $('#mAddr');
+
+        let addr1 = $('#sample6_postcode').val();
+        let addr2 = $('#sample6_address').val();
+        let addr3 = $('#sample6_detailAddress').val();
+
+        let addr = "(" + addr1 + ")" + addr2 + ", " + addr3;
+
+        mAddr.val(addr);
+
+        if (!check_id) {
+            alert('아이디 중복체크를 진행해주세요.');
+        } else if (!check_pw || !check_pw2) {
+            alert('비밀번호를 확인해주세요.');
+        } else if (!check_email || !check_email2) {
+            alert('이메일 인증을 진행해주세요.');
+        } else {
+            mJoinForm.submit();
+        }
+    });
+
+</script>
+
+</html>

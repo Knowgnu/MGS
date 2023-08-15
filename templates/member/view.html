@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="sooms">
+    <meta name="date" content="23.07.05">
+    <meta name="description" content="JPA 회원상세보기">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title>회원정보 상세보기</title>
+</head>
+<body>
+<table>
+    <caption>회원정보 상세보기</caption>
+    <tr>
+        <th>항목</th>
+        <th>내용</th>
+    </tr>
+
+    <tr>
+        <th>아이디</th>
+        <td>[[${view.MId}]]</td>
+    </tr>
+
+    <tr>
+        <th>비밀번호</th>
+        <td>[[${view.MPw}]]</td>
+    </tr>
+
+    <tr>
+        <th>이름</th>
+        <td>[[${view.MName}]]</td>
+    </tr>
+
+    <tr>
+        <th>생년월일</th>
+        <td>[[${view.MBirth}]]</td>
+    </tr>
+
+    <tr>
+        <th>성별</th>
+        <td>[[${view.MGender}]]</td>
+    </tr>
+
+    <tr>
+        <th>이메일</th>
+        <td>[[${view.MEmail}]]</td>
+    </tr>
+
+    <tr>
+        <th>연락처</th>
+        <td>[[${view.MPhone}]]</td>
+    </tr>
+
+    <tr>
+        <th>주소</th>
+        <td>[[${view.MAddr}]]</td>
+    </tr>
+
+    <tr>
+        <th colspan="2">
+            <input th:type="button" value="수정" id="modify"/>
+            <input th:type="button" value="삭제" id="delete"/>
+            <button id="rqList2">신청물품리스트</button>
+            <button id="psmList2">인원조사신청리스트</button>
+            <button id="likeList">좋아요리스트</button>
+        </th>
+
+    </tr>
+
+</table>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script>
+    // 수정
+    $('#modify').click(function () {
+        location.href = "/mModiForm/[[${view.mId}]]";
+    });
+    // 삭제
+    $('#delete').click(function () {
+        location.href = "/mDelete/[[${view.mId}]]";
+    });
+    // rqList2
+    $('#rqList2').click(function () {
+        location.href = "/rqList2/[[${view.mId}]]";
+    });
+    $('#likeList').click(function () {
+        location.href = "/likeList/[[${view.mId}]]";
+    });
+    $('#psmList2').click(function () {
+        location.href = "/psmList2/[[${view.mId}]]";
+    });
+
+</script>
+
+</html>

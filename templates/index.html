@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:c="http://www.w3.org/1999/html">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="HS4140">
+    <meta name="date" content="">
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+    <title></title>
+</head>
+
+<body>
+<input type="text" name="key" id="key"/>
+<input type="button" value="검색" id="btnSearch"></br></br>
+<a href="https://kauth.kakao.com/oauth/authorize?client_id=026e112cb03c5da1a1a341e3a7a12982&redirect_uri=http://localhost:9092/oauth/kakao&response_type=code">카카오로그인</a>
+<p th:text="'nickname: ' + ${nickname}"></p>
+<p th:text="'loginId : ' + ${session.loginId}"></p>
+<button id="join" th:if="${session.loginId eq null}">회원가입</button></br></br>
+<button id="klogout">카카오로그아웃</button></br></br>
+<button id="login" th:if="${session.loginId eq null}">로그인</button></br></br>
+<button id="logout" th:if="${session.loginId ne null}">로그아웃</button><br><br>
+<button id="request">물품신청하러가기</button><br><br>
+<button id="cList" th:if="${session.loginId eq 'admin'}">회사목록</button>
+<button id="pList" th:if="${session.loginId eq 'admin'}">상품목록</button>
+<button id="rqList" th:if="${session.loginId eq 'admin'}">신청물품 리스트(어드민)</button>
+<button id="psList">인원조사 리스트</button>
+<button id="sList">판매목록</button>
+
+<button id="mList" th:if="${session.loginId ne null}">회원목록</button>
+<table class="nshop">
+    <tbody></tbody>
+</table>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="
+        crossorigin="anonymous"></script>
+<script>
+
+    let id = "[[${session.loginId}]]";
+
+    $('#join').click(function () {
+        location.href = "joinForm";
+    });
+
+    $('#klogout').click(function(){
+        location.href="klogout";
+    });
+
+    $('#login').click(function () {
+        location.href = "loginForm";
+    });
+
+    $('#logout').click(function () {
+        location.href = "mLogout";
+    });
+
+    $('#request').click(function () {
+        if (id == ""){
+            alert('로그인 후 이용해주세요!')
+            location.href="/loginForm"
+        }
+        if (id != ""){
+            location.href = "requestForm";
+        }
+    });
+
+    $('#rqList').click(function () {
+        location.href = "rqList";
+    });
+    $('#cList').click(function () {
+        location.href = "cList";
+    });
+
+    $('#pList').click(function () {
+        location.href = "pList";
+    });
+    $('#sList').click(function () {
+        location.href = "sList";
+    });
+    $('#mList').click(function () {
+        location.href = "mList";
+    });
+
+    $('#psList').click(function () {
+        location.href = "psList";
+    });
+
+
+
+
+    $('#btnSearch').click(function () {
+        let list = []
+        let keyword = $('#key').val();
+        console.log(keyword);
+        $.ajax({
+            url: "nsCrawling",
+            type: "get",
+            dataType: "json",
+            data : { "keyword" : keyword },
+            success: function (result) {
+                list = result;
+                console.log(list);
+                nshop(list);
+            }, error: function () {
+                alert('nsCrawling 통신 실패!')
+            }
+        });
+
+        function nshop(list) {
+            console.log(list);
+
+            let txt = "";
+            txt += '<table>'
+            for (let i in list){
+
+                txt += `<tr>`;
+                txt += `<td><a target="_blank" href="${list[i].link}"><p>${list[i].title}</p></a></td>`;
+                txt += `<td><img src="${list[i].image}" width="200px"></td>`;
+                txt += `<td><p>${list[i].price}</p></td>`;
+                txt += `<td><p>${list[i].mallName}</p></td>`;
+                txt += `</tr>`;
+
+            }
+            txt += '</table>'
+            $('.nshop tbody').empty();
+            $('.nshop tbody').append(txt);
+
+        }
+
+    });
+</script>
+
+</html>

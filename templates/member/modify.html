@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="author" content="sooms">
+  <meta name="date" content="23.07.05">
+  <meta name="description" content="JPA 회원수정">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+  <title>회원수정</title>
+  <style>
+    table, td, th{
+      border: solid 1px;
+      border-collapse: collapse;
+    }
+    td, th{
+      padding : 10px
+    }
+  </style>
+</head>
+
+<body>
+<form action="/mModify" method="POST" name="mModiForm">
+  <table>
+    <caption>회원수정</caption>
+
+
+    <tr>
+      <th>아이디</th>
+      <td><input type="text" name="mId" th:value="${modify.mId}" readonly/></td>
+    </tr>
+
+    <tr>
+      <th>비밀번호</th>
+      <td><input type="password" name="mPw" id="mPw" size="40" placeholder="영문, 숫자, 특수문자 혼합" required/>
+        <br/><span id="check2"></span></td>
+    </tr>
+
+    <tr>
+      <th>비밀번호 확인</th>
+      <td><input type="password" id="checkPw" size="40" required/>
+        <br/><span id="check3"></span></td>
+
+    </tr>
+
+    <tr>
+      <th>이름</th>
+      <td><input type="text" id="mName" name="mName" size="40" required/></td>
+    </tr>
+
+    <tr>
+      <th>생년월일</th>
+      <td><input type="date" name="mBirth"/></td>
+    </tr>
+
+    <tr>
+      <th>성별</th>
+      <td>남성<input type="radio" name="mGender" value="남성" />
+        여성<input type="radio" name="mGender" value="여성" /></td>
+    </tr>
+
+    <tr>
+      <th>이메일</th>
+      <td><input type="email" id="mEmail" name="mEmail" size="40" required/></td>
+    </tr>
+
+    <tr>
+      <th>연락처</th>
+      <td><input type="text" name="mPhone" size="40" required/></td>
+    </tr>
+
+    <tr>
+      <th>주소</th>
+      <td>
+        <input type="text" 	id="sample6_postcode" placeholder="우편번호">
+        <input type="button" onclick="sample6_execDaumPostcode()" value="우편번호 찾기"><br>
+        <input type="text"  size="40" id="sample6_address" placeholder="주소"><br>
+        <input type="text"  size="40" id="sample6_detailAddress" placeholder="상세주소">
+        <input type="hidden" id="mAddr" name="mAddr" />
+      </td>
+    </tr>
+
+    <tr>
+      <th colspan="2"><input type="button" value="수정" id="submitForm"/></th>
+    </tr>
+
+  </table>
+</form>
+</body>
+
+
+<script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+
+  let check_pw = false;
+  let check_pw2 = false;
+
+  $('#submitForm').click(function () {
+
+    let mAddr = $('#mAddr');
+
+    let addr1 = $('#sample6_postcode').val();
+    let addr2 = $('#sample6_address').val();
+    let addr3 = $('#sample6_detailAddress').val();
+
+    let addr = "(" + addr1 + ") " + addr2 + ", " + addr3;
+    mAddr.val(addr);
+
+    if (check_pw && check_pw2) {
+      mModiForm.submit();
+    } else {
+      alert('입력한 정보를 확인해주세요!');
+    }
+
+
+  });
+
+  $('#mPw').keyup(function () {
+
+    let mPw = $('#mPw').val();
+    let check2 = $('#check2');
+
+
+    // 기본값 -1
+    let num = mPw.search(/[0-9]/);	// 숫자 입력 여부 : 입력하면 -1이 아니다
+    let eng = mPw.search(/[a-z]/);	// 영문 입력 여부 : 입력하면 -1이 아니다
+    let spe = mPw.search(/[`~!@#$%^&*|\\\'\":;\/?]/);	// 특수문자 입력 여부 : 입력하면 -1이 아니다
+    let spc = mPw.search(/\s/);	// 공백 여부 : 입력하면 -1이 아니다
+
+    // console.log("num = " + num + ", eng = " + eng + ", spe = " + spe + ", spc = " + spc);
+
+    if (mPw.length < 8 || mPw.length > 16) {
+      check2.html("비밀번호는 8자리에서 16자리 이내로 입력해주세요.");
+      check2.css("color", "red");
+    } else if (spc != -1) {
+      check2.html("비밀번호는 공백없이 입력해주세요");
+      check2.css("color", "red");
+    } else if (num == -1 || eng == -1 || spe == -1) {
+      check2.html("영문, 숫자, 특수문자를 혼합하여 입력해주세요.");
+      check2.css("color", "red");
+    } else {
+      check2.html("사용가능한 비밀번호 입니다.");
+      check2.css("color", "blue");
+      check_pw = true;
+    }
+
+  });
+
+  $('#checkPw').keyup(function () {
+
+    let mPw = $('#mPw').val();
+    let checkPw = $('#checkPw').val();
+
+    let check3 = $('#check3');
+
+    if (mPw == checkPw) {
+      check3.html("비밀번호 일치");
+      check3.css("color", "blue");
+      check_pw2 = true;
+    } else {
+      check3.html("비밀번호 불일치");
+      check3.css("color", "red");
+    }
+
+  });
+
+  function sample6_execDaumPostcode() {
+    new daum.Postcode({
+      oncomplete: function (data) {
+        // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
+        // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+        // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+        var addr = ''; // 주소 변수
+
+        //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+        if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+          addr = data.roadAddress;
+        } else { // 사용자가 지번 주소를 선택했을 경우(J)
+          addr = data.jibunAddress;
+        }
+
+        // 우편번호와 주소 정보를 해당 필드에 넣는다.
+        document.getElementById('sample6_postcode').value = data.zonecode;
+        document.getElementById("sample6_address").value = addr;
+        // 커서를 상세주소 필드로 이동한다.
+        document.getElementById("sample6_detailAddress").focus();
+      }
+    }).open();
+  }
+
+  /* 사진 미리보기 */
+  $("#mProfile").on("change", function (event) {
+
+    let file = event.target.files[0];
+
+    let reader = new FileReader();
+    reader.onload = function (e) {
+
+      $("#mProfileName").attr("src", e.target.result);
+    }
+
+    reader.readAsDataURL(file);
+  });
+
+
+</script>
+
+</html>
